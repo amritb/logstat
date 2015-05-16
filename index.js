@@ -12,7 +12,7 @@ var dynoHash = {}, urlHash = {}, modeHash = {}, responseTime = [];
 cli.enable('help', 'version', 'status');
 
 console.log('\nCreating hasmaps');
-cli.progress(0);
+cli.progress(0.05);
 
 cli.withStdinLines(function(lines, newline) {
   
@@ -57,7 +57,7 @@ function showResults() {
     dynoTable.push([ index , item ]);
   });
 
-  cli.output('\nDynos ( Dyno that responded most ---> '+ maxDynoName +' ):');
+  cli.output('\nDynos:');
   cli.output(dynoTable.toString());
 
   // URL table
@@ -73,22 +73,35 @@ function showResults() {
   cli.output(urlTable.toString());
 
   // Calculating mean, median, mode
+  var mean, median, mode;
   var sortedResponseTime = responseTime.sort(function(a,b) {return a-b;});
-  var meanResponseTime = _.sum(sortedResponseTime) / sortedResponseTime.length;
-  cli.info('Mean: ' + meanResponseTime);
+  var mean = _.sum(sortedResponseTime) / sortedResponseTime.length;
   
   var middle = sortedResponseTime.length / 2;
   if(sortedResponseTime.length % 2 === 1) {
-    cli.info('Median: ' + sortedResponseTime[middle]);
+    median = sortedResponseTime[middle];
   } else {
-    cli.info('Median: ' + (sortedResponseTime[middle - 1] + sortedResponseTime[middle] ) / 2);
+    median = (sortedResponseTime[middle - 1] + sortedResponseTime[middle] ) / 2;
   }
   
-  var maxOccurance = _.values(modeHash).sort(function(a,b) {return b-a;});
-  console.log(modeHash);
-  cli.info('Mode: ' + _.findKey(modeHash, maxOccurance));
-
-    
+  var highestOccurance = 0, highestOccuranceResTime = 0;
+  _.forOwn(modeHash, function(item, index){
+    if(modeHash[index] > highestOccurance) {
+      highestOccurance = modeHash[index];
+      highestOccuranceResTime = index;
+    }
+  });
+  mode = highestOccuranceResTime;
+  
+  var dataTable = new Table({
+    head: ['Operation', 'Value']
+  });
+  dataTable.push(['mean', mean + 'ms']);
+  dataTable.push(['median', median + 'ms']);
+  dataTable.push(['mode', mode + 'ms (occured ' + highestOccurance + ' times)']);
+  dataTable.push(['max dyno', maxDynoName]);
+  cli.output('\nCalculations:');
+  cli.output(dataTable.toString());
 }
 
 function pushOrIncr(obj, item) {
