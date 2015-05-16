@@ -1,0 +1,24 @@
+{
+  "name": "logstat",
+  "version": "0.1.0",
+  "description": "Log stats using hashmap",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha tests/*"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/amritb/logstat.git"
+  },
+  "author": "Amritb",
+  "license": "",
+  "bugs": {
+    "url": "https://github.com/amritb/logstat/issues"
+  },
+  "homepage": "https://github.com/amritb/logstat#readme",
+  "dependencies": {
+    "cli": "^0.6.6",
+    "cli-table": "^0.3.1",
+    "lodash": "^3.8.0"
+  }
+}
