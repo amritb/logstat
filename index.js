@@ -11,34 +11,39 @@ var dynoHash = {}, urlHash = {}, modeHash = {}, responseTime = [];
 
 cli.enable('help', 'version', 'status');
 
+var options = cli.parse({
+  path: ['p', 'Path of the log file', 'path']
+});
+
+if(!options.path) {
+  cli.error('Please provide PATH of the log file');
+  process.exit(1);
+}
+
 console.log('\nCreating hasmaps');
 cli.progress(0.05);
 
-cli.withStdinLines(function(lines, newline) {
-  
+cli.withInput(options.path, function(item, newline, eof) {
+
+  if(eof){ 
+    cli.progress(1);
+    cli.ok('Hashmaps created');
+    showResults();
+    return;
+  }
+
   cli.progress(0.3);
 
-  lines.forEach(function(item, index) {
-    var lineSplitted = item.split(" "); 
-    var urlWithMethod = lineSplitted[3].substring(7) + ' '  + lineSplitted[4].substring(5).replace(/\d+/g, config.URL_PLACEHOLDER); 
-    var resTime = parseInt(lineSplitted[8].substring(8).split("ms")[0]) + parseInt(lineSplitted[9].substring(8).split("ms")[0]);
+  var lineSplitted = item.split(" "); 
+  var urlWithMethod = lineSplitted[3].substring(7) + ' '  + lineSplitted[4].substring(5).replace(/\d+/g, config.URL_PLACEHOLDER); 
+  var resTime = parseInt(lineSplitted[8].substring(8).split("ms")[0]) + parseInt(lineSplitted[9].substring(8).split("ms")[0]);
 
-    if(config.URL_FILTERS.indexOf(urlWithMethod) !== -1) {
-      responseTime.push(resTime); 
-      pushOrIncr(dynoHash, lineSplitted[7].substring(5));
-      pushOrIncr(urlHash, urlWithMethod);
-      pushOrIncr(modeHash, resTime);
-    }
-    var progress = (((index / lines.length) * 70) / 100) + 0.3;
-
-    cli.progress(progress);
-
-    if(index === lines.length - 1) {
-      cli.progress(1);
-      cli.ok('Hashmaps created');
-      showResults();
-    }
-  });
+  if(config.URL_FILTERS.indexOf(urlWithMethod) !== -1) {
+    responseTime.push(resTime); 
+    pushOrIncr(dynoHash, lineSplitted[7].substring(5));
+    pushOrIncr(urlHash, urlWithMethod);
+    pushOrIncr(modeHash, resTime);
+  }
 });
 
 function showResults() {
