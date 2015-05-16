@@ -1,4 +1,7 @@
 #!/usr/bin/env node
+/**
+ * A CLI tool using node-cli to analyse server logs
+ */
 
 'use strict'
 
@@ -9,8 +12,10 @@ var cli = require('cli'),
 
 var dynoHash = {}, urlHash = {}, modeHash = {}, responseTime = [];
 
+// Enabling required cli plugins
 cli.enable('help', 'version', 'status');
 
+// Set the required PATH option
 var options = cli.parse({
   path: ['p', 'Path of the log file', 'path']
 });
@@ -23,6 +28,7 @@ if(!options.path) {
 console.log('\nCreating hasmaps');
 cli.progress(0.05);
 
+// Iterate through each line of the log file and create hashmap
 cli.withInput(options.path, function(item, newline, eof) {
 
   if(eof){ 
@@ -35,9 +41,12 @@ cli.withInput(options.path, function(item, newline, eof) {
   cli.progress(0.3);
 
   var lineSplitted = item.split(" "); 
+  // Save urls with this pattern: GET /api/users/{user_id}/....
   var urlWithMethod = lineSplitted[3].substring(7) + ' '  + lineSplitted[4].substring(5).replace(/\d+/g, config.URL_PLACEHOLDER); 
+  // Calculate response time
   var resTime = parseInt(lineSplitted[8].substring(8).split("ms")[0]) + parseInt(lineSplitted[9].substring(8).split("ms")[0]);
 
+  // Process the log only if its amoung the given URLs
   if(config.URL_FILTERS.indexOf(urlWithMethod) !== -1) {
     responseTime.push(resTime); 
     pushOrIncr(dynoHash, lineSplitted[7].substring(5));
@@ -46,6 +55,9 @@ cli.withInput(options.path, function(item, newline, eof) {
   }
 });
 
+/**
+ * Generates the output
+ */
 function showResults() {
 
   // Dyno table
@@ -101,14 +113,18 @@ function showResults() {
   var dataTable = new Table({
     head: ['Operation', 'Value']
   });
-  dataTable.push(['mean', mean + 'ms']);
-  dataTable.push(['median', median + 'ms']);
-  dataTable.push(['mode', mode + 'ms (occured ' + highestOccurance + ' times)']);
+  dataTable.push(['mean', mean + ' ms']);
+  dataTable.push(['median', median + ' ms']);
+  dataTable.push(['mode', mode + ' ms (occured ' + highestOccurance + ' times)']);
   dataTable.push(['max dyno', maxDynoName]);
   cli.output('\nCalculations:');
   cli.output(dataTable.toString());
 }
 
+/**
+ * If the item exists in object, increament the count
+ * else push the new value.
+ */
 function pushOrIncr(obj, item) {
   if(item in obj) {
     obj[item] = obj[item] + 1;
